@@ -7,13 +7,13 @@ from forms.user import RegisterForm
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
+
 @app.route('/login')
 def login():
     return "true"
 
-
-
-@app.route('/register')
+@app.route('/')
+@app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
@@ -37,5 +37,7 @@ def reqister():
         return "true"
     return render_template('register.html', title='Регистрация', form=form)
 
+
 if __name__ == '__main__':
+    db_session.global_init("blogs.db")
     app.run(port=8080, host='127.0.0.1')
