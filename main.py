@@ -1,4 +1,4 @@
-from flask import Flask, render_template, make_response, jsonify
+from flask import Flask, render_template, make_response, jsonify, request, url_for
 from werkzeug.utils import redirect
 from data import db_session
 from data.posts import Post
@@ -7,9 +7,12 @@ from forms.login import LoginForm
 from forms.register import RegisterForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from api import users_api
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+UPLOAD_FOLDER = 'static/profile_pictures'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -74,6 +77,46 @@ def register():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
+@app.route('/game 1', methods=['GET', 'POST'])
+def game_1():
+    return render_template("Game 1.html")
+
+@app.route('/game 2', methods=['GET', 'POST'])
+def game_2():
+    return render_template("Game 2.html")
+
+@app.route('/game 3', methods=['GET', 'POST'])
+def game_3():
+    return render_template("Game 3.html")
+
+
+@app.route('/user_profil', methods=['GET', 'POST'])
+def user_profile():
+    if request.method == 'POST':
+        uploaded_file = request.files['profile_picture']
+        if uploaded_file.filename != '':
+            filename = uploaded_file.filename
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            uploaded_file.save(file_path)
+            profile_picture_url = url_for('static', filename=f'profile_pictures/{filename}')
+            return redirect(url_for('profil', profile_picture_url=profile_picture_url))
+
+
+    return render_template('profil.html', profile_picture_url=None)
+
+
+@app.route('/profil')
+def profil():
+    profile_picture_url = request.args.get('profile_picture_url')
+    return render_template('profil.html', profile_picture_url=profile_picture_url)
+
+@app.route('/balance', methods=['GET', 'POST'])
+def balance():
+    # db_sess = db_session.create_session()
+    # user = db_sess.query(User).get(user_id)
+    # a = user.balance
+    return render_template('balance.html')
+
 
 @app.errorhandler(404)
 def not_found(error):
@@ -92,41 +135,41 @@ def bad_request(_):
 
 if __name__ == '__main__':
     db_session.global_init("blogs.db")
-
-    db_sess = db_session.create_session()
-    post = db_sess.query(Post).filter(Post.id == 1).first()
-    if not post:
-        post = Post()
-        post.id = 1
-        post.name = 'Администратор'
-        db_sess.add(post)
-        db_sess.commit()
-
-    post = db_sess.query(Post).filter(Post.id == 2).first()
-    if not post:
-        post = Post()
-        post.id = 2
-        post.name = 'Модератор'
-        db_sess.add(post)
-        db_sess.commit()
-
-    post = db_sess.query(Post).filter(Post.id == 3).first()
-    if not post:
-        post = Post()
-        post.id = 3
-        post.name = 'Пользователь'
-        db_sess.add(post)
-        db_sess.commit()
-
-    user = db_sess.query(User).filter(User.email == 'admin@mail.ru').first()
-    if not user:
-        user = User()
-        user.email = 'admin@mail.ru'
-        user.name = 'admin'
-        user.post_id = 1
-        user.set_password('admin')
-        db_sess.add(user)
-        db_sess.commit()
-
-    app.register_blueprint(users_api.blueprint)
+    #
+    # db_sess = db_session.create_session()
+    # post = db_sess.query(Post).filter(Post.id == 1).first()
+    # if not post:
+    #     post = Post()
+    #     post.id = 1
+    #     post.name = 'Администратор'
+    #     db_sess.add(post)
+    #     db_sess.commit()
+    #
+    # post = db_sess.query(Post).filter(Post.id == 2).first()
+    # if not post:
+    #     post = Post()
+    #     post.id = 2
+    #     post.name = 'Модератор'
+    #     db_sess.add(post)
+    #     db_sess.commit()
+    #
+    # post = db_sess.query(Post).filter(Post.id == 3).first()
+    # if not post:
+    #     post = Post()
+    #     post.id = 3
+    #     post.name = 'Пользователь'
+    #     db_sess.add(post)
+    #     db_sess.commit()
+    #
+    # user = db_sess.query(User).filter(User.email == 'admin@mail.ru').first()
+    # if not user:
+    #     user = User()
+    #     user.email = 'admin@mail.ru'
+    #     user.name = 'admin'
+    #     user.post_id = 1
+    #     user.set_password('admin')
+    #     db_sess.add(user)
+    #     db_sess.commit()
+    #
+    # app.register_blueprint(users_api.blueprint)
     app.run(port=8080, host='127.0.0.1')

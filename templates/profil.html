@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1><center>Профиль</center></h1>
+
+{% if profile_picture_url %}
+    <img src="{{ profile_picture_url }}" alt="Картинка">
+{% else %}
+    <p>Картинка профиля не загружена</p>
+{% endif %}
+
+<form action="/user_profil" method="post" enctype="multipart/form-data">
+    <label for="profile_picture">Выберите изображение профиля:</label><br>
+    <input type="file" id="profile_picture" name="profile_picture" accept="image/*"><br><br>
+    <input type="submit" value="Загрузить">
+</form>
+
+{% endblock %}
