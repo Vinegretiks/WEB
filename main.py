@@ -36,9 +36,9 @@ def load_user(user_id):
 @app.route('/')
 def index():
     if current_user.is_authenticated:
-        return render_template('index_auth.html', title='Казино')
+        return render_template('index_auth.html', title='Moonstruck', specific_page=True)
     else:
-        return render_template('index.html', title='Казино')
+        return render_template('index.html', title='Moonstruck', specific_page=True)
 
 
 @app.route('/logout')
