@@ -27,7 +27,7 @@
     </p>
     {% if filename %}
         <div>
-            <img src="{{ url_for('static', filename='image.png') }}"/>
+            <img src="{{ url_for('static', filename=filename) }}"/>
         </div>
     {% endif %}
     <form method="post" action="/user_profil" enctype="multipart/form-data">

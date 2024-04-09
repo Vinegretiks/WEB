@@ -122,7 +122,7 @@ def user_profile():
         return render_template('profil.html')
 
 
-@app.route('/user_profil', methods=['POST'])
+@app.route('/upload_image', methods=['POST'])
 def upload_image():
     print(1212)
     if 'file' not in request.files:
