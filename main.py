@@ -80,6 +80,7 @@ def register():
             name=form.name.data,
             email=form.email.data
         )
+        user.balance(100)
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()
@@ -116,8 +117,9 @@ def user_profile():
     return render_template('profil.html')
 
 
-@app.route('/user_profil', methods=['GET', 'POST'])
+@app.route('/user_profil', methods=['POST'])
 def upload_image():
+    print(1212)
     if 'file' not in request.files:
         flash('Нету картинки')
         return redirect(request.url)
@@ -128,7 +130,7 @@ def upload_image():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        # print('upload_image filename: ' + filename)
+        print('upload_image filename: ' + filename)
         flash('Картинка успешно загруженна на сервер')
         return render_template('profil.html', filename=filename)
     else:
@@ -136,9 +138,9 @@ def upload_image():
         return redirect(request.url)
 
 
-@app.route('/display/<filename>')
+@app.route('/display/<filename>', methods=['POST'])
 def display_image(filename):
-    #print('display_image filename: ' + filename)
+    print('display_image filename: ' + filename)
     return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
 # profile_picture_url = request.args.get('profile_picture_url')
@@ -146,10 +148,10 @@ def display_image(filename):
 
 @app.route('/balance', methods=['GET', 'POST'])
 def balance():
-    # db_sess = db_session.create_session()
-    # user = db_sess.query(User).get(user_id)
-    # a = user.balance
-    return render_template('balance.html')
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email).first()
+    a = user.balance
+    return render_template('balance.html', bal=a)
 
 
 @app.errorhandler(404)
