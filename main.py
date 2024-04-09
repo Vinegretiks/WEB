@@ -1,5 +1,5 @@
-from flask import Flask, render_template, make_response, jsonify, request, url_for
-from werkzeug.utils import redirect
+from flask import Flask, render_template, make_response, jsonify, request, url_for, flash
+from werkzeug.utils import redirect, secure_filename
 from data import db_session
 from data.posts import Post
 from data.users import User
@@ -11,8 +11,17 @@ import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
-UPLOAD_FOLDER = 'static/profile_pictures'
+
+UPLOAD_FOLDER = 'static/uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -77,13 +86,16 @@ def register():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
+
 @app.route('/game 1', methods=['GET', 'POST'])
 def game_1():
     return render_template("Game 1.html")
 
+
 @app.route('/game 2', methods=['GET', 'POST'])
 def game_2():
     return render_template("Game 2.html")
+
 
 @app.route('/game 3', methods=['GET', 'POST'])
 def game_3():
@@ -92,23 +104,45 @@ def game_3():
 
 @app.route('/user_profil', methods=['GET', 'POST'])
 def user_profile():
-    if request.method == 'POST':
-        uploaded_file = request.files['profile_picture']
-        if uploaded_file.filename != '':
-            filename = uploaded_file.filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            uploaded_file.save(file_path)
-            profile_picture_url = url_for('static', filename=f'profile_pictures/{filename}')
-            return redirect(url_for('profil', profile_picture_url=profile_picture_url))
+    # if request.method == 'POST':
+    #     uploaded_file = request.files['profile_picture']
+    #     if uploaded_file.filename != '':
+    #         filename = uploaded_file.filename
+    #         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    #         uploaded_file.save(file_path)
+    #         profile_picture_url = url_for('static', filename=f'profile_pictures/{filename}')
+    #         return redirect(url_for('profil', profile_picture_url=profile_picture_url))
+    # return render_template('profil.html', profile_picture_url=None)
+    return render_template('profil.html')
 
 
-    return render_template('profil.html', profile_picture_url=None)
+@app.route('/user_profil', methods=['GET', 'POST'])
+def upload_image():
+    if 'file' not in request.files:
+        flash('Нету картинки')
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '':
+        flash('Картинка не выбрана')
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        # print('upload_image filename: ' + filename)
+        flash('Картинка успешно загруженна на сервер')
+        return render_template('profil.html', filename=filename)
+    else:
+        flash('Нужно загрузить картинку в формотах - png, jpg, jpeg, gif')
+        return redirect(request.url)
 
 
-@app.route('/profil')
-def profil():
-    profile_picture_url = request.args.get('profile_picture_url')
-    return render_template('profil.html', profile_picture_url=profile_picture_url)
+@app.route('/display/<filename>')
+def display_image(filename):
+    #print('display_image filename: ' + filename)
+    return redirect(url_for('static', filename='uploads/' + filename), code=301)
+
+# profile_picture_url = request.args.get('profile_picture_url')
+# return render_template('profil.html', profile_picture_url=profile_picture_url)
 
 @app.route('/balance', methods=['GET', 'POST'])
 def balance():
