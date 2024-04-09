@@ -105,16 +105,21 @@ def game_3():
 
 @app.route('/user_profil', methods=['GET', 'POST'])
 def user_profile():
-    # if request.method == 'POST':
-    #     uploaded_file = request.files['profile_picture']
-    #     if uploaded_file.filename != '':
-    #         filename = uploaded_file.filename
-    #         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    #         uploaded_file.save(file_path)
-    #         profile_picture_url = url_for('static', filename=f'profile_pictures/{filename}')
-    #         return redirect(url_for('profil', profile_picture_url=profile_picture_url))
-    # return render_template('profil.html', profile_picture_url=None)
-    return render_template('profil.html')
+    if request.method == 'POST':
+        if 'profile_picture' not in request.files:
+            return redirect(request.url)
+
+        uploaded_file = request.files['profile_picture']
+        if uploaded_file.filename != '':
+            filename = 'avatar.' + ".".join(uploaded_file.filename.split('.')[1:])
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            uploaded_file.save(file_path)
+            return redirect('/user_profil')
+    if os.path.exists(url_for('static', filename='uploads/avatar.png')[1:]):
+        filename = 'uploads/avatar.png'
+        return render_template('profil.html', filename=filename)
+    else:
+        return render_template('profil.html')
 
 
 @app.route('/user_profil', methods=['POST'])
@@ -143,8 +148,30 @@ def display_image(filename):
     print('display_image filename: ' + filename)
     return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
+
 # profile_picture_url = request.args.get('profile_picture_url')
 # return render_template('profil.html', profile_picture_url=profile_picture_url)
+@app.route('/upload-my-image', methods=['POST'])
+def upload_file():
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['file']
+    # if user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(ABSOLUTE_PATH_TO_YOUR_FOLDER, filename))
+        new_image = Image(
+            path=PATH_TO_YOUR_FOLDER,
+            filename=filename,
+            ext=filename.rsplit('.', 1)[1].lower()
+        )
+
 
 @app.route('/balance', methods=['GET', 'POST'])
 def balance():
