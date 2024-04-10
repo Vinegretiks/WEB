@@ -1,8 +1,11 @@
+from random import randint
+
 from flask import Flask, render_template, make_response, jsonify, request, url_for, flash
 from werkzeug.utils import redirect, secure_filename
 from data import db_session
 from data.posts import Post
 from data.users import User
+from forms.gamefirst import GameFirst
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -11,6 +14,11 @@ import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+CLICK_COUNT = -1
+attempt1, attempt2, attempt3, attempt4, attempt5 = '', '', '', '', ''
+RANDOM_NUM = randint(1, 100)
+it = ''
+print(RANDOM_NUM)
 
 UPLOAD_FOLDER = 'static/uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -87,10 +95,58 @@ def register():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
-
+def proverka():
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email).first()
+    if user.balance < 10:
+        return False
+    return True
 @app.route('/game 1', methods=['GET', 'POST'])
 def game_1():
-    return render_template("Game 1.html")
+    global CLICK_COUNT
+    global RANDOM_NUM, it
+    form = GameFirst()
+    global attempt1, attempt2, attempt3, attempt4, attempt5
+    if proverka():
+        if form.validate_on_submit():
+            CLICK_COUNT += 1
+            num = int(form.number.data)
+            form.number.data = ''
+            if CLICK_COUNT < 6:
+                if num > RANDOM_NUM: a = 'Загаданное число меньше'
+                if num < RANDOM_NUM: a = 'Загаданное число больше'
+                if num == RANDOM_NUM:
+                    db_sess = db_session.create_session()
+                    user = db_sess.query(User).filter(User.email).first()
+                    user.balance = user.balance + 10
+                    db_sess.commit()
+                    it = f'Вы проиграли, +10 к балансу. Загаданное число {RANDOM_NUM}'
+                    CLICK_COUNT = 0
+                    attempt1, attempt2, attempt3, attempt4, attempt5, attempt6 = '', '', '', '', '', ''
+                    db_sess = db_session.create_session()
+                    user = db_sess.query(User).filter(User.email).first()
+                    user.balance = user.balance + 10
+                    db_sess.commit()
+                    RANDOM_NUM = randint(1, 100)
+                if CLICK_COUNT == 1: attempt1 = a
+                if CLICK_COUNT == 2: attempt2 = a
+                if CLICK_COUNT == 3: attempt3 = a
+                if CLICK_COUNT == 4: attempt4 = a
+                if CLICK_COUNT == 5: attempt5 = a
+            else:
+                it = f'Вы проиграли, -10 к балансу. Загаданное число {RANDOM_NUM}'
+                CLICK_COUNT = 0
+                attempt1, attempt2, attempt3, attempt4, attempt5, attempt6 = '', '', '', '', '', ''
+                db_sess = db_session.create_session()
+                user = db_sess.query(User).filter(User.email).first()
+                user.balance = user.balance - 10
+                db_sess.commit()
+            print(CLICK_COUNT)
+    else:
+        return render_template("Game 1.html", form=form, attempt1=attempt1, attempt2=attempt2, attempt3=attempt3,
+                               attempt4=attempt4, attempt5=attempt5, it='Недостаточно средств для продолжения игры')
+    return render_template("Game 1.html", form=form, attempt1=attempt1, attempt2=attempt2, attempt3=attempt3,
+                           attempt4=attempt4, attempt5=attempt5, it=it)
 
 
 @app.route('/game 2', methods=['GET', 'POST'])
@@ -198,7 +254,6 @@ def bad_request(_):
 
 if __name__ == '__main__':
     db_session.global_init("blogs.db")
-    #
     # db_sess = db_session.create_session()
     # post = db_sess.query(Post).filter(Post.id == 1).first()
     # if not post:
