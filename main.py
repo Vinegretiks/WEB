@@ -1,12 +1,16 @@
+import random
+
 from flask import Flask, render_template, make_response, jsonify, request, url_for, flash
 from werkzeug.utils import redirect, secure_filename
 from data import db_session
 from data.posts import Post
 from data.users import User
+from forms.third_game import ThirdGame, StartThirdGame
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from api import users_api
+from random import randint
 import os
 
 app = Flask(__name__)
@@ -17,6 +21,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+
+
+
+User_summ = 0
 
 
 def allowed_file(filename):
@@ -90,17 +98,61 @@ def register():
 
 @app.route('/game 1', methods=['GET', 'POST'])
 def game_1():
-    return render_template("Game 1.html")
+    return render_template("Game_1.html")
 
 
 @app.route('/game 2', methods=['GET', 'POST'])
 def game_2():
-    return render_template("Game 2.html")
+    return render_template("Game_2.html")
 
+
+@app.route('/Start_game_3', methods=['GET', 'POST'])
+def start_game_3():
+    global User_summ
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email).first()
+    bal = user.balance
+    form = StartThirdGame()
+    if form.validate_on_submit():
+        User_summ = form.Third_game_sum.data
+        if int(bal) >= int(User_summ):
+            if 100 >= int(User_summ) >= 10:
+                return redirect('/game 3')
+            else:
+                return render_template("Start_game_3.html", form=form, message="Введите корректное число")
+        else:
+            return render_template("Start_game_3.html", form=form, message="У вас недостаточно денег на балансе")
+    return render_template("Start_game_3.html", form=form)
 
 @app.route('/game 3', methods=['GET', 'POST'])
 def game_3():
-    return render_template("Game 3.html")
+    global User_summ
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email).first()
+    form = ThirdGame()
+    first = random.randint(1, 50)
+    second = random.randint(1, 50)
+    third = random.randint(1, 50)
+    win = "Вы проиграли"
+    if form.validate_on_submit():
+        if user.balance >= int(User_summ):
+            if first == second == third:
+                win = "Джекпот"
+                user.balance += int(User_summ) * 5
+                db_sess.commit()
+            elif first == second or second == third or first == third:
+                win = "Вы выиграли, у вас совпало два числа!"
+                user.balance += int(User_summ) * 3
+                db_sess.commit()
+            else:
+                user.balance -= int(User_summ)
+                db_sess.commit()
+            return render_template("Game_3.html", form=form, User_summ=User_summ, first=first, second=second, third=third, win=win)
+        else:
+            win = "У вас недостаточно средств"
+            return render_template("Game_3.html", form=form, User_summ=User_summ, win=win)
+    return render_template("Game_3.html", form=form, User_summ=User_summ)
+
 
 
 @app.route('/user_profil', methods=['GET', 'POST'])
@@ -124,7 +176,7 @@ def user_profile():
 
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
-    print(1212)
+    # print(1212)
     if 'file' not in request.files:
         flash('Нету картинки')
         return redirect(request.url)
@@ -198,21 +250,13 @@ def bad_request(_):
 
 if __name__ == '__main__':
     db_session.global_init("blogs.db")
-    #
+
     # db_sess = db_session.create_session()
     # post = db_sess.query(Post).filter(Post.id == 1).first()
     # if not post:
     #     post = Post()
     #     post.id = 1
     #     post.name = 'Администратор'
-    #     db_sess.add(post)
-    #     db_sess.commit()
-    #
-    # post = db_sess.query(Post).filter(Post.id == 2).first()
-    # if not post:
-    #     post = Post()
-    #     post.id = 2
-    #     post.name = 'Модератор'
     #     db_sess.add(post)
     #     db_sess.commit()
     #
@@ -233,6 +277,6 @@ if __name__ == '__main__':
     #     user.set_password('admin')
     #     db_sess.add(user)
     #     db_sess.commit()
-    #
+
     # app.register_blueprint(users_api.blueprint)
     app.run(port=8080, host='127.0.0.1')

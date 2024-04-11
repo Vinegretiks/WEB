@@ -1,5 +1,5 @@
 import flask
-from flask import redirect
+from flask import redirect, render_template
 from flask_login import login_required, current_user
 
 blueprint = flask.Blueprint(
@@ -10,16 +10,17 @@ blueprint = flask.Blueprint(
 
 
 @blueprint.route('/users', method=['GET'])
-@login_required
+# @login_required
 def get_users():
     if current_user.post_id == 1:
-        return "Обработчик в news_api"
-    else:
-        return redirect('/')
+        return render_template('admin panel.html')
+        # return "Обработчик в news_api"
+    # else:
+    #     return redirect('/')
 
 
 @blueprint.route('/users/<int:id>', method=['GET'])
-@login_required
+# @login_required
 def get_user(id):
     if current_user.post_id == 1:
         return "Обработчик в news_api"
@@ -28,7 +29,7 @@ def get_user(id):
 
 
 @blueprint.route('/users', method=['POST'])
-@login_required
+# @login_required
 def create_user():
     if current_user.post_id == 1:
         return "Обработчик в news_api"
@@ -37,7 +38,7 @@ def create_user():
 
 
 @blueprint.route('/users/<int:id>', method=['PUT'])
-@login_required
+# @login_required
 def update_user(id):
     if current_user.post_id == 1:
         return "Обработчик в news_api"

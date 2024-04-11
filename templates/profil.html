@@ -1,19 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!--<h1>-->
-<!--    <center>Профиль</center>-->
-<!--</h1>-->
-
-<!--{% if profile_picture_url %}-->
-<!--<img src="{{ profile_picture_url }}" alt="Картинка">-->
-<!--{% else %}-->
-<!--<p>Картинка профиля не загружена</p>-->
-<!--{% endif %}-->
 <p><h1 align="center">Профиль</h1></p>
 <div class="container">
 <div class="row">
-    <h2>Select a file to upload</h2>
     <p>
         {% with messages = get_flashed_messages() %}
           {% if messages %}

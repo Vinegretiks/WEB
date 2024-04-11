@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 style="color: white;">
+    <center> Вы открыли раздел с увлекательной игрой под названием "Вихрь удачи"</center>
+</h3>
+<h5 style="color: white;">
+    <center>Именно тут у вас получится попытать свою удачи и выйграть большой КУШ</center>
+</h5>
+<h6 style="color: white;">
+    <center>Пожалуйста напишите сумму, на которую хотите сыграть(от 10 до 100)</center>
+</h6>
+<style>
+                body {background-image: url('/static/фон.jpg');
+                background-size: cover;}
+
+</style>
+
+<form action="/Start_game_3" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.Third_game_sum.label }}<br>
+        {{ form.Third_game_sum(class="form-control") }}<br>
+        {% for error in form.Third_game_sum.errors %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endfor %}
+    </p>
+    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+</form>
+{% endblock %}
