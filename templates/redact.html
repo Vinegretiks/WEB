@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>
+    <center style="color: white;">Профиль</center>
+</h1>
+<style>
+                body {
+                background-image: url('/static/hacker.jpg');
+                background-size: cover;}
+
+
+</style>
+<form action="/register" method="post">
+    {{ form.hidden_tag() }}
+    <p>
+    <h3 style="color: white;">Почта: {{ email }}</h3>
+        {{ form.email(class="form-control", type="email") }}<br>
+        {% for error in form.email.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>
+        <h3 style="color: white;">Имя пользователя: {{ name }}</h3>
+        {{ form.name.label }}<br>
+        {{ form.name(class="form-control") }}<br>
+        {% for error in form.name.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+        <p>
+         <h3 style="color: white;">Баланс: {{ bal }}</h3>
+        {{ form.balance.label }}<br>
+        {{ form.balance(class="form-control") }}<br>
+        {% for error in form.balance.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+    {{message}}
+</form>
+{% endblock %}

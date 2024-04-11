@@ -125,7 +125,7 @@ def game_1():
                     user = db_sess.query(User).filter(User.email).first()
                     user.balance = user.balance + 10
                     db_sess.commit()
-                    it = f'Вы проиграли, +10 к балансу. Загаданное число {RANDOM_NUM}'
+                    it = f'Вы выйграли, +10 к балансу. Загаданное число {RANDOM_NUM}'
                     CLICK_COUNT = 0
                     attempt1, attempt2, attempt3, attempt4, attempt5, attempt6 = '', '', '', '', '', ''
                     db_sess = db_session.create_session()
