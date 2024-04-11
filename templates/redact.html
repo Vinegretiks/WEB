@@ -5,13 +5,13 @@
     <center style="color: white;">Профиль</center>
 </h1>
 <style>
-                body {
-                background-image: url('/static/hacker.jpg');
-                background-size: cover;}
+    body {
+    background-image: url('/static/hacker.jpg');
+    background-size: cover;}
 
 
 </style>
-<form action="/register" method="post">
+<form action="{{ action_str }}" method='post'>
     {{ form.hidden_tag() }}
     <p>
     <h3 style="color: white;">Почта: {{ email }}</h3>

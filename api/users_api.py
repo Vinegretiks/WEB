@@ -25,35 +25,37 @@ def get_users():
         if form.validate_on_submit():
             ID = int(form.number.data)
             print(ID)
-            if db_sess.query(User).filter(User.id == ID):
-                return redirect('/users_red')
+            if db_sess.query(User).filter(User.id == ID).first():
+                return redirect(f'/users_red/{ID}')
             return render_template('admin_panel.html', form=form, users=users, it='Такого пользователя нет')
         return render_template('admin_panel.html', form=form, users=users)
     else:
         return redirect('/')
 
 
-@blueprint.route('/users_red', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@blueprint.route('/users_red/<int:id>', methods=['GET', 'POST'])
 @login_required
-def users():
-    global ID
+def users(id):
+    ID = id
     if current_user.post_id == 1:
-        form = Admin_redact()
-        ID = 5
-        print(ID)
         db_sess = db_session.create_session()
         users = db_sess.query(User).filter(User.id == ID).first()
+        form = Admin_redact()
+        if form.validate_on_submit():
+            user = db_sess.query(User).filter(User.id == ID).first()
+            user.balance = int(form.balance.data)
+            users.name = form.name.data
+            users.email = form.email.data
+            print(form.balance)
+            db_sess.commit()
+            return redirect('/users')
+
         form.email.data = users.email
         form.name.data = users.name
         form.balance.data = users.balance
-        if form.validate_on_submit():
-            user = db_sess.query(User).filter(User.id == ID).first()
-            user.balance = form.balance.data
-            users.name = form.name.data
-            users.email = int(form.email.data)
-            db_sess.commit()
-            return redirect('/users')
-        return render_template('redact.html', form=form)
+        print(id, form.validate_on_submit())
+
+        return render_template('redact.html', action_str=f'/users_red/{ID}', id=ID, form=form)
     else:
         return redirect('/')
 
