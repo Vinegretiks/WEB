@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 style="color: white;">
+    <center>Ваша ставка: {{ User_summ }}
+    </center>
+</h3>
+<h4 style="color: white;">
+    <center>Пожалуйста нажмите на кнопку и прокрутите барабан</center>
+</h4>
+
+<form action="/game 3" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+</form>
+
+<style>
+                body {background-image: url('/static/фон.jpg');
+                background-size: cover;}
+
+
+</style>
+
+<h2 style="color: white;"><center>{{ first }} {{ second }} {{ third }}</center></h2>
+<h3><center>{{ win }}</center></h3>
+{% endblock %}

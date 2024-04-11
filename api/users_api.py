@@ -9,7 +9,7 @@ blueprint = flask.Blueprint(
 )
 
 
-@blueprint.route('/users', method=['GET'])
+@blueprint.route('/users', methods=['GET'])
 @login_required
 def get_users():
     if current_user.post_id == 1:
@@ -18,7 +18,7 @@ def get_users():
         return redirect('/')
 
 
-@blueprint.route('/users/<int:id>', method=['GET'])
+@blueprint.route('/users/<int:id>', methods=['GET'])
 @login_required
 def get_user(id):
     if current_user.post_id == 1:
@@ -27,7 +27,7 @@ def get_user(id):
         return redirect('/')
 
 
-@blueprint.route('/users', method=['POST'])
+@blueprint.route('/users', methods=['POST'])
 @login_required
 def create_user():
     if current_user.post_id == 1:
@@ -36,7 +36,7 @@ def create_user():
         return redirect('/')
 
 
-@blueprint.route('/users/<int:id>', method=['PUT'])
+@blueprint.route('/users/<int:id>', methods=['PUT'])
 @login_required
 def update_user(id):
     if current_user.post_id == 1:
@@ -45,7 +45,7 @@ def update_user(id):
         return redirect('/')
 
 
-@blueprint.route('/users/<int:id>', method=['DELETE'])
+@blueprint.route('/users/<int:id>', methods=['DELETE'])
 @login_required
 def delete_user(id):
     if current_user.post_id == 1:

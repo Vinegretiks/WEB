@@ -11,14 +11,16 @@ from forms.register import RegisterForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from api import users_api
 import os
+from forms.third_game import ThirdGame, StartThirdGame
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
-CLICK_COUNT = -1
+CLICK_COUNT = 0
 attempt1, attempt2, attempt3, attempt4, attempt5 = '', '', '', '', ''
 RANDOM_NUM = randint(1, 100)
 it = ''
 print(RANDOM_NUM)
+User_summ = 0
 
 UPLOAD_FOLDER = 'static/uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -95,12 +97,15 @@ def register():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
+
 def proverka():
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email).first()
     if user.balance < 10:
         return False
     return True
+
+
 @app.route('/game 1', methods=['GET', 'POST'])
 def game_1():
     global CLICK_COUNT
@@ -143,20 +148,65 @@ def game_1():
                 db_sess.commit()
             print(CLICK_COUNT)
     else:
-        return render_template("Game 1.html", form=form, attempt1=attempt1, attempt2=attempt2, attempt3=attempt3,
+        return render_template("Game_1.html", form=form, attempt1=attempt1, attempt2=attempt2, attempt3=attempt3,
                                attempt4=attempt4, attempt5=attempt5, it='Недостаточно средств для продолжения игры')
-    return render_template("Game 1.html", form=form, attempt1=attempt1, attempt2=attempt2, attempt3=attempt3,
+    return render_template("Game_1.html", form=form, attempt1=attempt1, attempt2=attempt2, attempt3=attempt3,
                            attempt4=attempt4, attempt5=attempt5, it=it)
 
 
 @app.route('/game 2', methods=['GET', 'POST'])
 def game_2():
-    return render_template("Game 2.html")
+    return render_template("Game_2.html")
+
+
+@app.route('/Start_game_3', methods=['GET', 'POST'])
+def start_game_3():
+    global User_summ
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email).first()
+    bal = user.balance
+    form = StartThirdGame()
+    if form.validate_on_submit():
+        User_summ = form.Third_game_sum.data
+        if int(bal) >= int(User_summ):
+            if 100 >= int(User_summ) >= 10:
+                return redirect('/game 3')
+            else:
+                return render_template("Start_game_3.html", form=form, message="Введите корректное число")
+        else:
+            return render_template("Start_game_3.html", form=form, message="У вас недостаточно денег на балансе")
+    return render_template("Start_game_3.html", form=form)
 
 
 @app.route('/game 3', methods=['GET', 'POST'])
 def game_3():
-    return render_template("Game 3.html")
+    global User_summ
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email).first()
+    form = ThirdGame()
+    first = randint(1, 50)
+    second = randint(1, 50)
+    third = randint(1, 50)
+    win = "Вы проиграли"
+    if form.validate_on_submit():
+        if user.balance >= int(User_summ):
+            if first == second == third:
+                win = "Джекпот"
+                user.balance += int(User_summ) * 5
+                db_sess.commit()
+            elif first == second or second == third or first == third:
+                win = "Вы выиграли, у вас совпало два числа!"
+                user.balance += int(User_summ) * 3
+                db_sess.commit()
+            else:
+                user.balance -= int(User_summ)
+                db_sess.commit()
+            return render_template("Game_3.html", form=form, User_summ=User_summ, first=first, second=second,
+                                   third=third, win=win)
+        else:
+            win = "У вас недостаточно средств"
+            return render_template("Game_3.html", form=form, User_summ=User_summ, win=win)
+    return render_template("Game_3.html", form=form, User_summ=User_summ)
 
 
 @app.route('/user_profil', methods=['GET', 'POST'])
@@ -254,40 +304,32 @@ def bad_request(_):
 
 if __name__ == '__main__':
     db_session.global_init("blogs.db")
-    # db_sess = db_session.create_session()
-    # post = db_sess.query(Post).filter(Post.id == 1).first()
-    # if not post:
-    #     post = Post()
-    #     post.id = 1
-    #     post.name = 'Администратор'
-    #     db_sess.add(post)
-    #     db_sess.commit()
-    #
-    # post = db_sess.query(Post).filter(Post.id == 2).first()
-    # if not post:
-    #     post = Post()
-    #     post.id = 2
-    #     post.name = 'Модератор'
-    #     db_sess.add(post)
-    #     db_sess.commit()
-    #
-    # post = db_sess.query(Post).filter(Post.id == 3).first()
-    # if not post:
-    #     post = Post()
-    #     post.id = 3
-    #     post.name = 'Пользователь'
-    #     db_sess.add(post)
-    #     db_sess.commit()
-    #
-    # user = db_sess.query(User).filter(User.email == 'admin@mail.ru').first()
-    # if not user:
-    #     user = User()
-    #     user.email = 'admin@mail.ru'
-    #     user.name = 'admin'
-    #     user.post_id = 1
-    #     user.set_password('admin')
-    #     db_sess.add(user)
-    #     db_sess.commit()
-    #
-    # app.register_blueprint(users_api.blueprint)
+    db_sess = db_session.create_session()
+    post = db_sess.query(Post).filter(Post.id == 1).first()
+    if not post:
+        post = Post()
+        post.id = 1
+        post.name = 'Администратор'
+        db_sess.add(post)
+        db_sess.commit()
+
+    post = db_sess.query(Post).filter(Post.id == 3).first()
+    if not post:
+        post = Post()
+        post.id = 3
+        post.name = 'Пользователь'
+        db_sess.add(post)
+        db_sess.commit()
+
+    user = db_sess.query(User).filter(User.email == 'admin@mail.ru').first()
+    if not user:
+        user = User()
+        user.email = 'admin@mail.ru'
+        user.name = 'admin'
+        user.post_id = 1
+        user.set_password('admin')
+        db_sess.add(user)
+        db_sess.commit()
+
+    app.register_blueprint(users_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
