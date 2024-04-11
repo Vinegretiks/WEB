@@ -33,13 +33,13 @@ def get_users():
         return redirect('/')
 
 
-@blueprint.route('/users_red', methods=['GET', 'POST'])
+@blueprint.route('/users_red', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @login_required
 def users():
     global ID
     if current_user.post_id == 1:
         form = Admin_redact()
-        ID = 2
+        ID = 5
         print(ID)
         db_sess = db_session.create_session()
         users = db_sess.query(User).filter(User.id == ID).first()
@@ -47,17 +47,17 @@ def users():
         form.name.data = users.name
         form.balance.data = users.balance
         if form.validate_on_submit():
-            if form.name.data != '' and form.email.data != '' and form.balance.data != '':
-                user = db_sess.query(User).filter(User.id == ID).first()
-                user.balance = form.balance.data
-                users.name = form.name.data
-                users.email = form.email.data
-                db_sess.commit()
-            elif form.name.data == '' and form.email.data == '' and form.balance.data == '':
-                ...
+            user = db_sess.query(User).filter(User.id == ID).first()
+            user.balance = form.balance.data
+            users.name = form.name.data
+            users.email = int(form.email.data)
+            db_sess.commit()
+            return redirect('/users')
         return render_template('redact.html', form=form)
     else:
         return redirect('/')
+
+
 # @blueprint.route('/users/delete', methods=['DELETE'])
 # @login_required
 # def delete_user(id):

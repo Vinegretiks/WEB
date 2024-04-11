@@ -90,7 +90,7 @@ def register():
             name=form.name.data,
             email=form.email.data
         )
-        user.balance(100)
+        user.balance = 100
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()
