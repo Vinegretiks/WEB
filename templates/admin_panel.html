@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>
+    <center style="color: white;">Профили</center>
+</h1>
+<style>
+                body {background-image: url('/static/hacker.jpg');
+                background-size: cover;}
+
+
+</style>
+    <table>
+        <tr>
+            <th style="color: white;">id</th>
+            <th>   </th>
+            <th style="color: white;">Имя</th>
+            <th>   </th>
+            <th style="color: white;">Почта</th>
+            <th>   </th>
+            <th style="color: white;">Баланс</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td style="color: white;">{{ user.id }}</td>
+            <th>   </th>
+            <td style="color: white;">{{ user.name }}</td>
+            <th>   </th>
+            <td style="color: white;">{{ user.email }}</td>
+            <th>   </th>
+            <td style="color: white;">{{ user.balance }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+<form action="/users" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <p>
+    <h1></h1>
+    {{ form.number(class="form-control") }}<br>
+    {% for error in form.number.errors %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endfor %}
+    </p>
+    <p>{{ form.submit_redact(type="submit", class="btn btn-primary") }}</p>
+
+</form>
+<h1 style="color: white;">{{ it }}</h1>
+{% endblock %}

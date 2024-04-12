@@ -1,5 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1><center>Игра 2</center></h1>
+<h2 style="color: white">
+    <center>Загадочное попадание</center>
+</h2>
+<h3 style="color: white"><center>Ваша ставка: {{ bal }}</center></h3>
+<!--<h5><center>Суть игры заключается в том, что вам нужно выбрать сектор, столбец или цвет, кол-во неогранично</center></h5>-->
+<!--<h6><center>По прошествию 10 секунд выведется число, после чего будет вам будет присвоен ваш выигрыш или проигрыш</center></h6>-->
+<!--<h7><center>Если вы готовы играть, то нажмите на кнопку ниже</center></h7>-->
+<style>
+                body {background-image: url('/static/phon2.jpeg');
+                background-size: cover;}
+
+
+</style>
+
+
+<form action="/game 2" method="post" novalidate>
+    {{ form.hidden_tag() }}
+
+    <p>
+    <center>{{ form.submit(type="submit", class="btn btn-primary") }}</center>
+    </p>
+
+    <center><img height="400" src="/static/second_game.jpg"/></center>
+    <h3 style="color: white"><center>{{ chi }}</center></h3>
+    <h4 style="color: white"><center>{{ win_text }}</center></h4>
+<!--    <h5 style="color: white"><center>{{ text }}</center></h5>-->
+
+    <p style="color: white">{{ form.Red() }}  {{ form.Red.label }}  {{ form.Black() }}  {{ form.Black.label }} {{ form.First_to_18() }}  {{ form.First_to_18.label }}</p>
+    <p style="color: white">{{ form.Even() }} {{ form.Even.label }}  {{ form.Odd() }}  {{ form.Odd.label }}  {{ form.Zero() }}  {{ form.Zero.label }} {{ form.TN_to_36() }}  {{ form.TN_to_36.label }}</p>
+    <p style="color: white">{{ form.Fst_12() }} {{ form.Fst_12.label }} {{ form.F2to1() }} {{ form.F2to1.label }}</p>
+    <p style="color: white">{{ form.Snd_12() }} {{ form.Snd_12.label }} {{ form.S2to1() }} {{ form.S2to1.label }}</p>
+    <p style="color: white">{{ form.Trd_12() }} {{ form.Trd_12.label }} {{ form.T2to1() }} {{ form.T2to1.label }}</p>
+</form>
 {% endblock %}

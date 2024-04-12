@@ -1,30 +1,35 @@
-import random
+from random import randint
 
 from flask import Flask, render_template, make_response, jsonify, request, url_for, flash
 from werkzeug.utils import redirect, secure_filename
 from data import db_session
 from data.posts import Post
 from data.users import User
-from forms.third_game import ThirdGame, StartThirdGame
+from forms.gamefirst import GameFirst
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from api import users_api
-from random import randint
 import os
+from time import sleep
+
+from forms.second_game import StartMenuSecondGame, SecondGame
+from forms.third_game import ThirdGame, StartThirdGame
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+CLICK_COUNT = 0
+attempt1, attempt2, attempt3, attempt4, attempt5 = '', '', '', '', ''
+RANDOM_NUM = randint(1, 100)
+it = ''
+print(RANDOM_NUM)
+User_summ, User_stavka = 0, 0
 
 UPLOAD_FOLDER = 'static/uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-
-
-
-User_summ = 0
 
 
 def allowed_file(filename):
@@ -96,14 +101,217 @@ def register():
     return render_template('register.html', title='Регистрация', form=form)
 
 
+def proverka():
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email).first()
+    if user.balance < 10:
+        return False
+    return True
+
+
 @app.route('/game 1', methods=['GET', 'POST'])
 def game_1():
-    return render_template("Game_1.html")
+    global CLICK_COUNT
+    global RANDOM_NUM, it
+    form = GameFirst()
+    global attempt1, attempt2, attempt3, attempt4, attempt5
+    if proverka():
+        if form.validate_on_submit():
+            CLICK_COUNT += 1
+            num = int(form.number.data)
+            form.number.data = ''
+            if CLICK_COUNT < 6:
+                if num > RANDOM_NUM: a = 'Загаданное число меньше'
+                if num < RANDOM_NUM: a = 'Загаданное число больше'
+                if num == RANDOM_NUM:
+                    db_sess = db_session.create_session()
+                    user = db_sess.query(User).filter(User.email).first()
+                    user.balance = user.balance + 10
+                    db_sess.commit()
+                    it = f'Вы выиграли, +10 к балансу. Загаданное число {RANDOM_NUM}'
+                    CLICK_COUNT = 0
+                    attempt1, attempt2, attempt3, attempt4, attempt5, attempt6 = '', '', '', '', '', ''
+                    db_sess = db_session.create_session()
+                    user = db_sess.query(User).filter(User.email).first()
+                    user.balance = user.balance + 10
+                    db_sess.commit()
+                    RANDOM_NUM = randint(1, 100)
+                if CLICK_COUNT == 1: attempt1 = a
+                if CLICK_COUNT == 2: attempt2 = a
+                if CLICK_COUNT == 3: attempt3 = a
+                if CLICK_COUNT == 4: attempt4 = a
+                if CLICK_COUNT == 5: attempt5 = a
+            else:
+                it = f'Вы проиграли, -10 к балансу. Загаданное число {RANDOM_NUM}'
+                CLICK_COUNT = 0
+                attempt1, attempt2, attempt3, attempt4, attempt5, attempt6 = '', '', '', '', '', ''
+                db_sess = db_session.create_session()
+                user = db_sess.query(User).filter(User.email).first()
+                user.balance = user.balance - 10
+                db_sess.commit()
+            print(CLICK_COUNT)
+    else:
+        return render_template("Game_1.html", form=form, attempt1=attempt1, attempt2=attempt2, attempt3=attempt3,
+                               attempt4=attempt4, attempt5=attempt5, it='Недостаточно средств для продолжения игры')
+    return render_template("Game_1.html", form=form, attempt1=attempt1, attempt2=attempt2, attempt3=attempt3,
+                           attempt4=attempt4, attempt5=attempt5, it=it)
+
+
+@app.route('/Start_game_2', methods=['GET', 'POST'])
+def start_game_2():
+    global User_stavka
+    form = StartMenuSecondGame()
+    db_sess = db_session.create_session()
+    user_game_2 = db_sess.query(User).filter(User.email).first()
+
+    if form.validate_on_submit():
+        User_stavka = form.Second_stavka.data
+        if user_game_2.balance >= int(User_stavka):
+            if 50 >= int(User_stavka) >= 10:
+                return redirect('/game 2')
+            else:
+                return render_template("Start_game_2.html", form=form, message='Введите конкретное число от 10 до 50')
+        else:
+            return render_template("Start_game_2.html", form=form, message='У вас недостаточно денег на балансе')
+    return render_template("Start_game_2.html", form=form)
 
 
 @app.route('/game 2', methods=['GET', 'POST'])
 def game_2():
-    return render_template("Game_2.html")
+    global User_stavka
+    form = SecondGame()
+    RED = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36]
+    BLACK = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35]
+    F_st_12 = [i for i in range(1, 13)]
+    S_st_12 = [i for i in range(12, 25)]
+    T_st_12 = [i for i in range(24, 37)]
+    F_2to1 = [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
+    S_2to1 = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35]
+    T_2to1 = [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]
+    First_to_18 = [i for i in range(1, 19)]
+    TN_to_36 = [i for i in range(19, 37)]
+    Zero = 0
+    CHISLO = randint(0, 36)
+    db_sess = db_session.create_session()
+    user_game_2 = db_sess.query(User).filter(User.email).first()
+    win_text = "Недостаточно средств для продолжения игры"
+    if form.validate_on_submit():
+        if user_game_2.balance >= int(User_stavka):
+            if not (form.Red.data or form.Black.data or form.Even.data or form.Odd.data \
+                    or form.Fst_12.data or form.Snd_12.data or form.Trd_12.data \
+                    or form.F2to1.data or form.S2to1.data or form.T2to1.data or form.Zero.data \
+                    or form.First_to_18.data or form.TN_to_36.data):
+                win_text = "Пожалуйста выберите, на что будете ставить"
+                return render_template("Game_2.html", form=form, win_text=win_text, bal=User_stavka)
+            else:
+                if form.Red.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.Black.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.Odd.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.Even.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.Fst_12.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.Snd_12.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.Trd_12.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.F2to1.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.S2to1.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.T2to1.data:
+                    user_game_2.balance -= int(User_stavka)
+                if form.Zero.data:
+                    user_game_2.balance -= int(User_stavka)
+                db_sess.commit()
+                if CHISLO == Zero and form.Zero.data:
+                    win_text = f'+ {int(User_stavka) * 5} к балансу'
+                    User_stavka += int(User_stavka) * 5
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in RED and form.Red.data:
+                    win_text = f"+ {int(User_stavka) * 2} к балансу"
+                    user_game_2.balance += int(User_summ) * 2
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in BLACK and form.Black.data:
+                    win_text = f"+ {int(User_stavka) * 2} к балансу"
+                    user_game_2.balance += int(User_summ) * 2
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO % 2 == 0 and form.Odd.data:
+                    win_text = f"+ {int(User_stavka) * 2} к балансу"
+                    user_game_2.balance += int(User_summ) * 2
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO % 2 != 0 and form.Even.data:
+                    win_text = f"+ {int(User_stavka) * 2} к балансу"
+                    user_game_2.balance += int(User_summ) * 2
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in F_st_12 and form.Fst_12.data:
+                    win_text = f"+ {int(User_stavka) + 15} к балансу"
+                    user_game_2.balance += int(User_summ)
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in S_st_12 and form.Snd_12.data:
+                    win_text = f"+ {int(User_stavka) + 15} к балансу"
+                    user_game_2.balance += int(User_summ)
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in T_st_12 and form.Trd_12.data:
+                    win_text = f"+ {int(User_stavka) + 15} к балансу"
+                    user_game_2.balance += int(User_summ)
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in S_2to1 and form.S2to1.data:
+                    win_text = f'+ {int(User_stavka) + 8} к балансу'
+                    user_game_2.balance += int(User_stavka) + 8
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in T_2to1 and form.T2to1.data:
+                    win_text = f'+ {int(User_stavka) + 8} к балансу'
+                    user_game_2.balance += int(User_stavka) + 8
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in F_2to1 and form.F2to1.data:
+                    win_text = f'+ {int(User_stavka) + 8} к балансу'
+                    user_game_2.balance += int(User_stavka) + 8
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in First_to_18 and form.First_to_18.data:
+                    win_text = f'+ {int(User_stavka) + 5} к балансу'
+                    user_game_2.balance += int(User_stavka) + 5
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                if CHISLO in TN_to_36 and form.TN_to_36.data:
+                    win_text = f'+ {int(User_stavka) + 5} к балансу'
+                    user_game_2.balance += int(User_stavka) + 5
+                    db_sess.commit()
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+                else:
+                    win_text = f'- {int(User_stavka)} к балансу из-за того, что вы выбрали нечего не выпало'
+                    return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
+                                           win_text=win_text)
+        else:
+            return render_template("Game_2.html", form=form, win_text=win_text, bal=User_stavka)
+    return render_template("Game_2.html", form=form, bal=User_stavka)
 
 
 @app.route('/Start_game_3', methods=['GET', 'POST'])
@@ -124,15 +332,16 @@ def start_game_3():
             return render_template("Start_game_3.html", form=form, message="У вас недостаточно денег на балансе")
     return render_template("Start_game_3.html", form=form)
 
+
 @app.route('/game 3', methods=['GET', 'POST'])
 def game_3():
     global User_summ
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email).first()
     form = ThirdGame()
-    first = random.randint(1, 50)
-    second = random.randint(1, 50)
-    third = random.randint(1, 50)
+    first = randint(1, 50)
+    second = randint(1, 50)
+    third = randint(1, 50)
     win = "Вы проиграли"
     if form.validate_on_submit():
         if user.balance >= int(User_summ):
@@ -147,12 +356,12 @@ def game_3():
             else:
                 user.balance -= int(User_summ)
                 db_sess.commit()
-            return render_template("Game_3.html", form=form, User_summ=User_summ, first=first, second=second, third=third, win=win)
+            return render_template("Game_3.html", form=form, User_summ=User_summ, first=first, second=second,
+                                   third=third, win=win)
         else:
             win = "У вас недостаточно средств"
             return render_template("Game_3.html", form=form, User_summ=User_summ, win=win)
     return render_template("Game_3.html", form=form, User_summ=User_summ)
-
 
 
 @app.route('/user_profil', methods=['GET', 'POST'])
@@ -250,33 +459,32 @@ def bad_request(_):
 
 if __name__ == '__main__':
     db_session.global_init("blogs.db")
+    db_sess = db_session.create_session()
+    post = db_sess.query(Post).filter(Post.id == 1).first()
+    if not post:
+        post = Post()
+        post.id = 1
+        post.name = 'Администратор'
+        db_sess.add(post)
+        db_sess.commit()
 
-    # db_sess = db_session.create_session()
-    # post = db_sess.query(Post).filter(Post.id == 1).first()
-    # if not post:
-    #     post = Post()
-    #     post.id = 1
-    #     post.name = 'Администратор'
-    #     db_sess.add(post)
-    #     db_sess.commit()
-    #
-    # post = db_sess.query(Post).filter(Post.id == 3).first()
-    # if not post:
-    #     post = Post()
-    #     post.id = 3
-    #     post.name = 'Пользователь'
-    #     db_sess.add(post)
-    #     db_sess.commit()
-    #
-    # user = db_sess.query(User).filter(User.email == 'admin@mail.ru').first()
-    # if not user:
-    #     user = User()
-    #     user.email = 'admin@mail.ru'
-    #     user.name = 'admin'
-    #     user.post_id = 1
-    #     user.set_password('admin')
-    #     db_sess.add(user)
-    #     db_sess.commit()
+    post = db_sess.query(Post).filter(Post.id == 3).first()
+    if not post:
+        post = Post()
+        post.id = 3
+        post.name = 'Пользователь'
+        db_sess.add(post)
+        db_sess.commit()
 
-    # app.register_blueprint(users_api.blueprint)
+    user = db_sess.query(User).filter(User.email == 'admin@mail.ru').first()
+    if not user:
+        user = User()
+        user.email = 'admin@mail.ru'
+        user.name = 'admin'
+        user.post_id = 1
+        user.set_password('admin')
+        db_sess.add(user)
+        db_sess.commit()
+
+    app.register_blueprint(users_api.blueprint)
     app.run(port=8080, host='127.0.0.1')

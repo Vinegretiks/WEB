@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 style="color: white"><center>Загадочное попадание</center></h2>
+<h5 style="color: white"><center>Суть игры заключается в том, что вам нужно выбрать сектор, столбец или цвет, кол-во неогранично</center></h5>
+<h6 style="color: white"><center>По прошествию 10 секунд выведется число, после чего будет вам будет присвоен ваш выигрыш или проигрыш</center></h6>
+<h7 style="color: white"><center>Если вы готовы играть, то нажмите сделайте ставку (от 10 до 50), а затем нажмите на кнопку ниже</center></h7>
+
+<style>
+                body {background-image: url('/static/phon2.jpeg');
+                background-size: cover;}
+</style>
+
+<form action="/Start_game_2" method="post" novalidate>
+    {{ form.hidden_tag() }}
+
+        <p>
+        {{ form.Second_stavka.label }}<br>
+        {{ form.Second_stavka(class="form-control") }}<br>
+        {% for error in form.Second_stavka.errors %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endfor %}
+    </p>
+
+    <p><center>{{ form.submit(type="submit", class="btn btn-primary") }}</center></p>
+</form>
+{% endblock %}
