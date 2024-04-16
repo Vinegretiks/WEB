@@ -17,21 +17,21 @@ from forms.second_game import StartMenuSecondGame, SecondGame
 from forms.third_game import ThirdGame, StartThirdGame
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
-CLICK_COUNT = 0
-attempt1, attempt2, attempt3, attempt4, attempt5 = '', '', '', '', ''
-RANDOM_NUM = randint(1, 100)
+app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'  # секртный ключ
+CLICK_COUNT = 0  # счётчик кликов
+attempt1, attempt2, attempt3, attempt4, attempt5 = '', '', '', '', ''  # попытки в первой игре
+RANDOM_NUM = randint(1, 100)  # рандомайзер от 1 до 100
 it = ''
-print(RANDOM_NUM)
-User_summ, User_stavka = 0, 0
+User_summ, User_stavka = 0, 0  # Ставки в первой и во второй игре соответсвтенно
 
-UPLOAD_FOLDER = 'static/uploads/'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+UPLOAD_FOLDER = 'static/uploads/'  # путь загрузки фото
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER  # фотка
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # размер загруженной картинки
 
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])  # допутимые форматы изображений
 
 
+# функция проверки провельности формата загруженной картинки в профиль
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -40,52 +40,58 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+# подключение базы данных
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
 
 
-@app.route('/')
+@app.route('/')  # путь к начальному файлу
 def index():
-    if current_user.is_authenticated:
-        return render_template('index_auth.html', title='Moonstruck', specific_page=True)
+    if current_user.is_authenticated:  # проверка на то, что пользователь авторизирован
+        return render_template('index_auth.html', title='Moonstruck',
+                               specific_page=True)  # обращение к html файлу с авторизацией
     else:
-        return render_template('index.html', title='Moonstruck', specific_page=True)
+        return render_template('index.html', title='Moonstruck',
+                               specific_page=True)  # обращение к html файлу, который отвечает за начальную страницу
 
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect("/")
+@app.route('/logout')  # путь к функции
+@login_required  # проверка, что пользователь зашёл в свой аккаунт
+def logout():  # функция logout
+    logout_user()  # функция, которая выходит из авторизации
+    return redirect("/")  # путь, перенаправляющий на главную страницу
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route('/login', methods=['GET', 'POST'])  # путь функции
+def login():  # функция логина пользователя, который уже зареган в базе данных
     form = LoginForm()
-    if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.email == form.email.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember_me.data)
-            return redirect("/")
+    if form.validate_on_submit():  # проверка на то, что кнопка нажата пользователем
+        db_sess = db_session.create_session()  # подключение к базе данных
+        user = db_sess.query(User).filter(
+            User.email == form.email.data).first()  # проверка на то, что совпадает почта при ригестрации и авторизации у пользователя
+        if user and user.check_password(form.password.data):  # проверка на правильность введённого пароля
+            login_user(user, remember=form.remember_me.data)  # запоминания пользователя
+            return redirect("/")  # путь, перенаправляющий на главную страницу
         return render_template('login.html',
                                message="Неправильный логин или пароль",
-                               form=form)
-    return render_template('login.html', title='Авторизация', form=form)
+                               form=form)  # обращение к html файлу, который отвечает за страницу с логином и направление смс, если не соблюдено условие
+    return render_template('login.html', title='Авторизация',
+                           form=form)  # обращение к html файлу, который отвечает за страницу с логином
 
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
+@app.route('/register', methods=['GET', 'POST'])  # путь функции
+def register():  # функция, которая вывдит форму регистрации нового пользователя
     form = RegisterForm()
-    if form.validate_on_submit():
-        if form.password.data != form.password_again.data:
+    if form.validate_on_submit():  # проверка того, что пользоветель нажал кнопку
+        if form.password.data != form.password_again.data:  # проверка на того, что пользователь правильно ввёл пароль в ячейке повтора пароля
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Пароли не совпадают")
         db_sess = db_session.create_session()
-        if db_sess.query(User).filter(User.email == form.email.data).first():
+        if db_sess.query(User).filter(
+                User.email == form.email.data).first():  # проверка на то, что пользователь уже зареган
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
@@ -93,14 +99,16 @@ def register():
             name=form.name.data,
             email=form.email.data
         )
-        user.balance(100)
-        user.set_password(form.password.data)
-        db_sess.add(user)
-        db_sess.commit()
-        return redirect('/login')
-    return render_template('register.html', title='Регистрация', form=form)
+        user.balance = 100  # присваивание начального баланса новенькому
+        user.set_password(form.password.data)  # установление пароля
+        db_sess.add(user)  # добавление пользователя
+        db_sess.commit()  # сохранение изменений в базе данных
+        return redirect('/login')  # перенаправление на страницу авторизаиии
+    return render_template('register.html', title='Регистрация',
+                           form=form)  # # обращение к html файлу, который отвечает за страницу с регистрацией пользователя
 
 
+# проверка в базе данных на то, что у пользователя достаточно денег на балансе
 def proverka():
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email).first()
@@ -435,33 +443,33 @@ def upload_file():
 
 
 @app.route('/balance', methods=['GET', 'POST'])
-def balance():
+def balance():  # показ баланса пользователя
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email).first()
     a = user.balance
     return render_template('balance.html', bal=a)
 
 
-@app.errorhandler(404)
+@app.errorhandler(404)  # сервер не может найти нужные страницы
 def not_found(error):
     return make_response(jsonify({'error': 'Not Found'}), 404)
 
 
-@app.errorhandler(401)
+@app.errorhandler(401)  # проблема с авторизацией, человек не авторизован
 def bad_request(_):
     return make_response(jsonify({'error': 'Not access'}), 401)
 
 
-@app.errorhandler(400)
+@app.errorhandler(400)  # отправка некорректных запросов
 def bad_request(_):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
-if __name__ == '__main__':
-    db_session.global_init("blogs.db")
+if __name__ == '__main__':  # если название файла совпадает с условием, то есть 'main'
+    db_session.global_init("blogs.db")  # подключение базы данных
     db_sess = db_session.create_session()
     post = db_sess.query(Post).filter(Post.id == 1).first()
-    if not post:
+    if not post:  # если нет администратора, то он создаётся
         post = Post()
         post.id = 1
         post.name = 'Администратор'
@@ -469,15 +477,15 @@ if __name__ == '__main__':
         db_sess.commit()
 
     post = db_sess.query(Post).filter(Post.id == 3).first()
-    if not post:
-        post = Post()
-        post.id = 3
-        post.name = 'Пользователь'
-        db_sess.add(post)
-        db_sess.commit()
+    # if not post:  # создание строки пользователя в таблице, где пользователь сможет заполнить данные
+    #     post = Post()
+    #     post.id = 3
+    #     post.name = 'Пользователь'
+    #     db_sess.add(post)
+    #     db_sess.commit()
 
     user = db_sess.query(User).filter(User.email == 'admin@mail.ru').first()
-    if not user:
+    if not user:  # создание администратора в базе данных
         user = User()
         user.email = 'admin@mail.ru'
         user.name = 'admin'
@@ -486,5 +494,5 @@ if __name__ == '__main__':
         db_sess.add(user)
         db_sess.commit()
 
-    app.register_blueprint(users_api.blueprint)
-    app.run(port=8080, host='127.0.0.1')
+    app.register_blueprint(users_api.blueprint)  # создание API
+    app.run(port=8080, host='127.0.0.1')  # порт подключения
