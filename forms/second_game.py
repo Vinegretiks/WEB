@@ -4,12 +4,12 @@ from wtforms.fields.simple import EmailField
 from wtforms.validators import DataRequired
 
 
-class StartMenuSecondGame(FlaskForm):
+class StartMenuSecondGame(FlaskForm):  # Класс, создаёт поля для ввода и кнопку
     submit = SubmitField("Сделать ставку")
     Second_stavka = StringField('', validators=[DataRequired()])
 
 
-class SecondGame(FlaskForm):
+class SecondGame(FlaskForm):  # Создание в наследуемом классе Radio-button и кнопки
     Red = BooleanField("Красное")
     Black = BooleanField("Чёрное")
     Even = BooleanField("Четное")

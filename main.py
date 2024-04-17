@@ -117,45 +117,42 @@ def proverka():
     return True
 
 
+# путь к первой игре
 @app.route('/game 1', methods=['GET', 'POST'])
 def game_1():
     global CLICK_COUNT
     global RANDOM_NUM, it
     form = GameFirst()
     global attempt1, attempt2, attempt3, attempt4, attempt5
-    if proverka():
-        if form.validate_on_submit():
+    if proverka():  # проверка баланса игрока
+        if form.validate_on_submit():  # проверка нажатия кнопки
             CLICK_COUNT += 1
             num = int(form.number.data)
             form.number.data = ''
-            if CLICK_COUNT < 6:
+            if CLICK_COUNT < 6:  # если попытки ещё есть, то игры продолжается
                 if num > RANDOM_NUM: a = 'Загаданное число меньше'
                 if num < RANDOM_NUM: a = 'Загаданное число больше'
-                if num == RANDOM_NUM:
+                if num == RANDOM_NUM:  # если введённое число пользователем равно загаданому числу, то
                     db_sess = db_session.create_session()
                     user = db_sess.query(User).filter(User.email).first()
-                    user.balance = user.balance + 10
+                    user.balance = user.balance + 10  # ему начисляется + 10 к балансу
                     db_sess.commit()
                     it = f'Вы выиграли, +10 к балансу. Загаданное число {RANDOM_NUM}'
                     CLICK_COUNT = 0
                     attempt1, attempt2, attempt3, attempt4, attempt5, attempt6 = '', '', '', '', '', ''
-                    db_sess = db_session.create_session()
-                    user = db_sess.query(User).filter(User.email).first()
-                    user.balance = user.balance + 10
-                    db_sess.commit()
                     RANDOM_NUM = randint(1, 100)
-                if CLICK_COUNT == 1: attempt1 = a
+                if CLICK_COUNT == 1: attempt1 = a  # вывод первой и последующих попыток
                 if CLICK_COUNT == 2: attempt2 = a
                 if CLICK_COUNT == 3: attempt3 = a
                 if CLICK_COUNT == 4: attempt4 = a
                 if CLICK_COUNT == 5: attempt5 = a
             else:
                 it = f'Вы проиграли, -10 к балансу. Загаданное число {RANDOM_NUM}'
-                CLICK_COUNT = 0
+                CLICK_COUNT = 0  # обнуление попыток
                 attempt1, attempt2, attempt3, attempt4, attempt5, attempt6 = '', '', '', '', '', ''
                 db_sess = db_session.create_session()
                 user = db_sess.query(User).filter(User.email).first()
-                user.balance = user.balance - 10
+                user.balance = user.balance - 10 # -10 к балансу
                 db_sess.commit()
             print(CLICK_COUNT)
     else:
@@ -372,8 +369,8 @@ def game_3():
     return render_template("Game_3.html", form=form, User_summ=User_summ)
 
 
-@app.route('/user_profil', methods=['GET', 'POST'])
-def user_profile():
+@app.route('/user_profil', methods=['GET', 'POST'])  # путь к профилю
+def user_profile():  # функция открытия профиля пользователя
     if request.method == 'POST':
         if 'profile_picture' not in request.files:
             return redirect(request.url)
