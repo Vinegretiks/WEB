@@ -152,7 +152,7 @@ def game_1():
                 attempt1, attempt2, attempt3, attempt4, attempt5, attempt6 = '', '', '', '', '', ''
                 db_sess = db_session.create_session()
                 user = db_sess.query(User).filter(User.email).first()
-                user.balance = user.balance - 10 # -10 к балансу
+                user.balance = user.balance - 10  # -10 к балансу
                 db_sess.commit()
             print(CLICK_COUNT)
     else:
@@ -162,15 +162,19 @@ def game_1():
                            attempt4=attempt4, attempt5=attempt5, it=it)
 
 
+# путь к второй игре
 @app.route('/Start_game_2', methods=['GET', 'POST'])
 def start_game_2():
     global User_stavka
+    # Создание формы
     form = StartMenuSecondGame()
+    # подключение и получение данных из бд
     db_sess = db_session.create_session()
     user_game_2 = db_sess.query(User).filter(User.email).first()
-
+    # отслеживание отправки формы
     if form.validate_on_submit():
         User_stavka = form.Second_stavka.data
+        # проверка есть ли у пользователя деньги на ещё одну игру
         if user_game_2.balance >= int(User_stavka):
             if 50 >= int(User_stavka) >= 10:
                 return redirect('/game 2')
@@ -181,10 +185,13 @@ def start_game_2():
     return render_template("Start_game_2.html", form=form)
 
 
+# путь к второй игре
 @app.route('/game 2', methods=['GET', 'POST'])
 def game_2():
     global User_stavka
+    # Создание формы
     form = SecondGame()
+    # переменные отвечающий за каждый выбранный виджет
     RED = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36]
     BLACK = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35]
     F_st_12 = [i for i in range(1, 13)]
@@ -197,11 +204,15 @@ def game_2():
     TN_to_36 = [i for i in range(19, 37)]
     Zero = 0
     CHISLO = randint(0, 36)
+    # подключение и получение данных из бд
     db_sess = db_session.create_session()
     user_game_2 = db_sess.query(User).filter(User.email).first()
     win_text = "Недостаточно средств для продолжения игры"
+    # отслеживание отправки формы
     if form.validate_on_submit():
+        # отслеживание достаточно ли средств у пользователя
         if user_game_2.balance >= int(User_stavka):
+            # проверка выбрал ли что-то пользователь
             if not (form.Red.data or form.Black.data or form.Even.data or form.Odd.data \
                     or form.Fst_12.data or form.Snd_12.data or form.Trd_12.data \
                     or form.F2to1.data or form.S2to1.data or form.T2to1.data or form.Zero.data \
@@ -209,6 +220,7 @@ def game_2():
                 win_text = "Пожалуйста выберите, на что будете ставить"
                 return render_template("Game_2.html", form=form, win_text=win_text, bal=User_stavka)
             else:
+                # снятие средств
                 if form.Red.data:
                     user_game_2.balance -= int(User_stavka)
                 if form.Black.data:
@@ -232,89 +244,105 @@ def game_2():
                 if form.Zero.data:
                     user_game_2.balance -= int(User_stavka)
                 db_sess.commit()
+
+                # прибавление средств, при правильных выборах игрока, нуль
                 if CHISLO == Zero and form.Zero.data:
                     win_text = f'+ {int(User_stavka) * 5} к балансу'
                     User_stavka += int(User_stavka) * 5
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, "красные" чисел
                 if CHISLO in RED and form.Red.data:
                     win_text = f"+ {int(User_stavka) * 2} к балансу"
                     user_game_2.balance += int(User_summ) * 2
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, "чёрные" числа
                 if CHISLO in BLACK and form.Black.data:
                     win_text = f"+ {int(User_stavka) * 2} к балансу"
                     user_game_2.balance += int(User_summ) * 2
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, чётность выпавшего числа
                 if CHISLO % 2 == 0 and form.Odd.data:
                     win_text = f"+ {int(User_stavka) * 2} к балансу"
                     user_game_2.balance += int(User_summ) * 2
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, нечётность выпавшего числа
                 if CHISLO % 2 != 0 and form.Even.data:
                     win_text = f"+ {int(User_stavka) * 2} к балансу"
                     user_game_2.balance += int(User_summ) * 2
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, первый столбец
                 if CHISLO in F_st_12 and form.Fst_12.data:
                     win_text = f"+ {int(User_stavka) + 15} к балансу"
                     user_game_2.balance += int(User_summ)
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, второй столбец
                 if CHISLO in S_st_12 and form.Snd_12.data:
                     win_text = f"+ {int(User_stavka) + 15} к балансу"
                     user_game_2.balance += int(User_summ)
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, третий столбец
                 if CHISLO in T_st_12 and form.Trd_12.data:
                     win_text = f"+ {int(User_stavka) + 15} к балансу"
                     user_game_2.balance += int(User_summ)
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, первая строка
                 if CHISLO in S_2to1 and form.S2to1.data:
                     win_text = f'+ {int(User_stavka) + 8} к балансу'
                     user_game_2.balance += int(User_stavka) + 8
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, вторая строка
                 if CHISLO in T_2to1 and form.T2to1.data:
                     win_text = f'+ {int(User_stavka) + 8} к балансу'
                     user_game_2.balance += int(User_stavka) + 8
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, третья строка
                 if CHISLO in F_2to1 and form.F2to1.data:
                     win_text = f'+ {int(User_stavka) + 8} к балансу'
                     user_game_2.balance += int(User_stavka) + 8
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, числа от 1 до 18
                 if CHISLO in First_to_18 and form.First_to_18.data:
                     win_text = f'+ {int(User_stavka) + 5} к балансу'
                     user_game_2.balance += int(User_stavka) + 5
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # прибавление средств, при правильных выборах игрока, числа от 19 до 36
                 if CHISLO in TN_to_36 and form.TN_to_36.data:
                     win_text = f'+ {int(User_stavka) + 5} к балансу'
                     user_game_2.balance += int(User_stavka) + 5
                     db_sess.commit()
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
+                # Снятие средств из-за "пустого" выбора
                 else:
                     win_text = f'- {int(User_stavka)} к балансу из-за того, что вы выбрали нечего не выпало'
                     return render_template("Game_2.html", form=form, bal=User_stavka, chi=f'Выпало число: {CHISLO}',
                                            win_text=win_text)
         else:
+            # отображение htmlки
             return render_template("Game_2.html", form=form, win_text=win_text, bal=User_stavka)
     return render_template("Game_2.html", form=form, bal=User_stavka)
 
