@@ -13,7 +13,7 @@ def global_init(db_file):
     if __factory:
         return
 
-    if not db_file or not db_file.strip():
+    if not db_file or not db_file.strip():  # нету необходимого файла
         raise Exception("Необходимо указать файл базы данных.")
 
     conn_str = f'sqlite:///{db_file.strip()}?check_same_thread=False'
@@ -27,6 +27,7 @@ def global_init(db_file):
     SqlAlchemyBase.metadata.create_all(engine)
 
 
+# создание сессии
 def create_session() -> Session:
     global __factory
     return __factory()

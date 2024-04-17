@@ -1,7 +1,7 @@
 import sqlalchemy
 from .db_session import SqlAlchemyBase
 
-
+# создание таблицы игр в базе данных
 class Games(SqlAlchemyBase):
     __tablename__ = 'games'
 

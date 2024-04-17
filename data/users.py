@@ -5,7 +5,7 @@ from sqlalchemy import orm
 from .db_session import SqlAlchemyBase
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
+# создание таблицы пользователей в базе данных
 class User(SqlAlchemyBase, UserMixin):
     __tablename__ = 'users'
 
@@ -17,8 +17,8 @@ class User(SqlAlchemyBase, UserMixin):
     post = orm.relationship('Post')
     balance = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
-    def set_password(self, password):
+    def set_password(self, password): # шифрование сгенерированного пароля
         self.hashed_password = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password): # проверка правильности шифрование пароля
         return check_password_hash(self.hashed_password, password)

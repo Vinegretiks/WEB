@@ -350,13 +350,15 @@ def game_2():
 @app.route('/Start_game_3', methods=['GET', 'POST'])
 def start_game_3():
     global User_summ
+    # подключение базе данных
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email).first()
     bal = user.balance
+    # создание формы
     form = StartThirdGame()
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # отправка формы
         User_summ = form.Third_game_sum.data
-        if int(bal) >= int(User_summ):
+        if int(bal) >= int(User_summ):  # проверка того, что на балансе денег больше, чем нужно для игры
             if 100 >= int(User_summ) >= 10:
                 return redirect('/game 3')
             else:
@@ -366,27 +368,31 @@ def start_game_3():
     return render_template("Start_game_3.html", form=form)
 
 
+# путь к третьей игре
 @app.route('/game 3', methods=['GET', 'POST'])
 def game_3():
     global User_summ
+    # подключение базе данных
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email).first()
+    # создание формы
     form = ThirdGame()
+    # выпадения рандомного числа
     first = randint(1, 50)
     second = randint(1, 50)
     third = randint(1, 50)
     win = "Вы проиграли"
     if form.validate_on_submit():
-        if user.balance >= int(User_summ):
-            if first == second == third:
+        if user.balance >= int(User_summ):  # проверка достаточности средств на балансе
+            if first == second == third:  # если три числа равны
                 win = "Джекпот"
                 user.balance += int(User_summ) * 5
                 db_sess.commit()
-            elif first == second or second == third or first == third:
+            elif first == second or second == third or first == third:  # если два любых числа равны
                 win = "Вы выиграли, у вас совпало два числа!"
                 user.balance += int(User_summ) * 3
                 db_sess.commit()
-            else:
+            else:  # если нечего не равно
                 user.balance -= int(User_summ)
                 db_sess.commit()
             return render_template("Game_3.html", form=form, User_summ=User_summ, first=first, second=second,
@@ -400,15 +406,16 @@ def game_3():
 @app.route('/user_profil', methods=['GET', 'POST'])  # путь к профилю
 def user_profile():  # функция открытия профиля пользователя
     if request.method == 'POST':
-        if 'profile_picture' not in request.files:
+        if 'profile_picture' not in request.files:  # файл не выбран пользолвателем
             return redirect(request.url)
 
         uploaded_file = request.files['profile_picture']
+        # файл выбран пользолвателем
         if uploaded_file.filename != '':
             filename = 'avatar.' + ".".join(uploaded_file.filename.split('.')[1:])
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            uploaded_file.save(file_path)
-            return redirect('/user_profil')
+            uploaded_file.save(file_path)  # сохранения фотки
+            return redirect('/user_profil')  # перенаправление на страницу
     if os.path.exists(url_for('static', filename='uploads/avatar.png')[1:]):
         filename = 'uploads/avatar.png'
         return render_template('profil.html', filename=filename)
@@ -416,17 +423,18 @@ def user_profile():  # функция открытия профиля польз
         return render_template('profil.html')
 
 
+# путь к файлу
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
     # print(1212)
-    if 'file' not in request.files:
+    if 'file' not in request.files:  # файл нету
         flash('Нету картинки')
         return redirect(request.url)
     file = request.files['file']
-    if file.filename == '':
+    if file.filename == '':  # файл не выбран пользолвателем
         flash('Картинка не выбрана')
         return redirect(request.url)
-    if file and allowed_file(file.filename):
+    if file and allowed_file(file.filename):  # загрузка файла, а также проверка правильности формата файла
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         print('upload_image filename: ' + filename)
@@ -437,24 +445,22 @@ def upload_image():
         return redirect(request.url)
 
 
+# путь к файлу
 @app.route('/display/<filename>', methods=['POST'])
-def display_image(filename):
+def display_image(filename):  # вывод файла перед пользователем
     print('display_image filename: ' + filename)
     return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
 
-# profile_picture_url = request.args.get('profile_picture_url')
-# return render_template('profil.html', profile_picture_url=profile_picture_url)
+# путь к файлу
 @app.route('/upload-my-image', methods=['POST'])
 def upload_file():
-    # check if the post request has the file part
-    if 'file' not in request.files:
+    # проверка на наличие файла
+    if 'file' not in request.files: # файла нету
         flash('No file part')
         return redirect(request.url)
     file = request.files['file']
-    # if user does not select file, browser also
-    # submit an empty part without filename
-    if file.filename == '':
+    if file.filename == '':  # выбран ли фаил
         flash('No selected file')
         return redirect(request.url)
     if file and allowed_file(file.filename):
@@ -466,7 +472,7 @@ def upload_file():
             ext=filename.rsplit('.', 1)[1].lower()
         )
 
-
+# путь к файлу
 @app.route('/balance', methods=['GET', 'POST'])
 def balance():  # показ баланса пользователя
     db_sess = db_session.create_session()
